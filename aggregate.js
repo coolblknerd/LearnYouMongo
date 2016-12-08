@@ -29,13 +29,29 @@
 // ----------------------------
 
 const mongo = require('mongodb').MongoClient,
-      url = 'mongodb:localhost//27017/learnyoumongo',
-      arg = process.argv[2];
-      
+   url = 'mongodb://localhost:27017/learnyoumongo';
+
+var size = process.argv[2];
+
 mongo.connect(url, function(e, db){
-   var collection = db.collection('prices');
-   
-   collection.aggregate({
-       
-   })
+   var prices = db.collection('prices');
+
+   prices.aggregate([{
+      $match: {
+         size: size
+      }
+   }, {
+      $group: {
+         _id: 'average',
+         average: {
+            $avg: '$price'
+         }
+      }
+   }]).toArray(function(err, results) {
+      if (err) throw err;
+
+      var avg = results[0].average.toFixed(2);
+      console.log(avg);
+      db.close();
+   });
 });
